@@ -22,6 +22,10 @@ redirect_uri = os.getenv('REDIRECT_URI')
 auth_url = "https://accounts.spotify.com/authorize" 
 token_url = "https://accounts.spotify.com/api/token"
 
+@app.route("/")
+def index():
+    return "Hello World!"
+
 @app.route("/authorize")
 def authorize():
     # Step 1: Redirect user to Spotify's authorization page
