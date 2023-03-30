@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 import os
 from werkzeug.utils import secure_filename
 from getmetadata import getmetadata2
+from getUserTopItems import get_user_top_items
+import random
 load_dotenv()
 
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -28,7 +30,7 @@ def authorize():
         "response_type": "code",
         "redirect_uri": redirect_uri,
         # Add additional scopes here if needed
-        "scope": "user-read-private user-read-email playlist-modify-private"
+        "scope": "user-read-private user-read-email playlist-modify-private user-top-read"
     }
     url = requests.Request('GET', auth_url, params=params).prepare().url
     return redirect(url)
@@ -56,20 +58,25 @@ def callback():
 @app.route('/top_songs')
 def top_songs():
     genre = request.args.get('genre')
+    genre = "pop"
+    top_items = get_user_top_items(session['access_token'])
+    print(top_items)
     headers = {
         'Authorization': 'Bearer ' + session['access_token']
     }
     params = (
         ('limit', '20'),
         ('seed_genres', genre),
+        ('seed_tracks', top_items[0] + ',' + top_items[1] + ',' + top_items[2] + ',' + top_items[3]),
     )
+    print(params)
     response = requests.get('https://api.spotify.com/v1/recommendations', headers=headers, params=params)
     data = response.json()
     tracks = data['tracks']
     top_songs = [track['name'] for track in tracks]
     top_songs_id = [track['id'] for track in tracks]
-    print(top_songs_id)
-    return {'top_songs': top_songs}
+    return {'top_songs': top_songs , 
+            'top_songs_id': top_songs_id}
 
 @app.route('/create_playlist', methods=['POST'])
 def create_playlist():
@@ -80,7 +87,6 @@ def create_playlist():
     response = requests.get('https://api.spotify.com/v1/me', headers=headers)
     user_id = response.json()['id']
     print(user_id)
-    # playlist_name = request.form['playlist_name']
     playlist_name = "test"
     song_ids = request.form.getlist('song_ids')
     headers = {
