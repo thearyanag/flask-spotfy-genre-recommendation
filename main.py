@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect , session
+from flask import Flask, request, redirect, session
 import requests
 import base64
 from dotenv import load_dotenv
@@ -6,6 +6,7 @@ import os
 from werkzeug.utils import secure_filename
 from getmetadata import getmetadata2
 from getUserTopItems import get_user_top_items
+from getSameArtistSong import getTopSong
 import random
 load_dotenv()
 
@@ -19,12 +20,14 @@ client_id = os.getenv('CLIENT_ID')
 client_secret = os.getenv('CLIENT_SECRET')
 redirect_uri = os.getenv('REDIRECT_URI')
 
-auth_url = "https://accounts.spotify.com/authorize" 
+auth_url = "https://accounts.spotify.com/authorize"
 token_url = "https://accounts.spotify.com/api/token"
+
 
 @app.route("/")
 def index():
     return "Hello World!"
+
 
 @app.route("/authorize")
 def authorize():
@@ -37,7 +40,9 @@ def authorize():
         "scope": "user-read-private user-read-email playlist-modify-private user-top-read"
     }
     url = requests.Request('GET', auth_url, params=params).prepare().url
+    print(url)
     return redirect(url)
+
 
 @app.route("/callback")
 def callback():
@@ -59,28 +64,39 @@ def callback():
 
     return "Access token: {}".format(access_token)
 
+
 @app.route('/top_songs')
 def top_songs():
     genre = request.args.get('genre')
     genre = "pop"
     top_items = get_user_top_items(session['access_token'])
-    print(top_items)
     headers = {
         'Authorization': 'Bearer ' + session['access_token']
     }
     params = (
         ('limit', '20'),
         ('seed_genres', genre),
-        ('seed_tracks', top_items[0] + ',' + top_items[1] + ',' + top_items[2] + ',' + top_items[3]),
+        ('seed_tracks', top_items[0] + ',' + top_items[1] +
+         ',' + top_items[2] + ',' + top_items[3]),
     )
-    print(params)
-    response = requests.get('https://api.spotify.com/v1/recommendations', headers=headers, params=params)
+    response = requests.get(
+        'https://api.spotify.com/v1/recommendations', headers=headers, params=params)
     data = response.json()
     tracks = data['tracks']
     top_songs = [track['name'] for track in tracks]
     top_songs_id = [track['id'] for track in tracks]
-    return {'top_songs': top_songs , 
-            'top_songs_id': top_songs_id}
+    artists = [track['artists'] for track in tracks]
+    artist_id = [artist[0]['id'] for artist in artists]
+    random_artist = random.sample(artist_id, 5)
+    artist_songs = []
+    for id in random_artist:
+        artist_songs.append(getTopSong(id, session['access_token']))
+    return {'top_songs': {
+        'name': top_songs,
+        'id': top_songs_id
+    },
+        'artist_songs': artist_songs}
+
 
 @app.route('/create_playlist', methods=['POST'])
 def create_playlist():
@@ -101,14 +117,17 @@ def create_playlist():
         'name': playlist_name,
         'public': False,
     }
-    response = requests.post(f'https://api.spotify.com/v1/users/{user_id}/playlists', headers=headers, json=data)
+    response = requests.post(
+        f'https://api.spotify.com/v1/users/{user_id}/playlists', headers=headers, json=data)
     playlist_id = response.json()['id']
     uris = [f'spotify:track:{song_id}' for song_id in song_ids]
     data = {
         'uris': uris,
     }
-    response = requests.post(f'https://api.spotify.com/v1/playlists/{playlist_id}/tracks', headers=headers, json=data)
+    response = requests.post(
+        f'https://api.spotify.com/v1/playlists/{playlist_id}/tracks', headers=headers, json=data)
     return {'playlist_id': playlist_id}
+
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -127,6 +146,7 @@ def upload_file():
     return {
         'genre': genre
     }
+
 
 if __name__ == "__main__":
     app.run(debug=True)
