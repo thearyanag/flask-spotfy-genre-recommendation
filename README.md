@@ -10,3 +10,9 @@ CLIENT_ID = "SPOTIFY_CLIENT_ID"
 CLIENT_SECRET = "SPOTIFY_CLIENT_SECRET"
 
 REDIRECT_URI = "http://localhost:5000/callback" // CALBACK URI
+
+create a python virtual environment,
+
+inside the enviroment install all the packages from requirements.txt file
+
+use `python3 main.py` to run the api.
