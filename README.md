@@ -9,7 +9,7 @@ CLIENT_ID = "SPOTIFY_CLIENT_ID"
 
 CLIENT_SECRET = "SPOTIFY_CLIENT_SECRET"
 
-REDIRECT_URI = "http://localhost:5000/callback" // CALBACK URI
+REDIRECT_URI = "http://localhost:8080/"  // CALBACK URI
 
 create a python virtual environment,
 
