@@ -86,6 +86,11 @@ def top_songs():
     tracks = data['tracks']
     top_songs = [track['name'] for track in tracks]
     top_songs_id = [track['id'] for track in tracks]
+    top_songs_album_images = [track['album']['images'] for track in tracks]
+    track_images = []
+    for images in top_songs_album_images:
+        track_images.append(images[0]['url'])
+    print(track_images)
     artists = [track['artists'] for track in tracks]
     artist_id = [artist[0]['id'] for artist in artists]
     random_artist = random.sample(artist_id, 5)
@@ -94,7 +99,8 @@ def top_songs():
         artist_songs.append(getTopSong(id, session['access_token']))
     return {'top_songs': {
         'name': top_songs,
-        'id': top_songs_id
+        'id': top_songs_id,
+        'images': track_images
     },
         'artist_songs': artist_songs}
 
