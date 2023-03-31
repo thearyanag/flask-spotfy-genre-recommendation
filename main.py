@@ -104,6 +104,25 @@ def top_songs():
     },
         'artist_songs': artist_songs}
 
+@app.route('/top_playlists')
+def top_playlists():
+    genre = request.args.get('genre')
+    genre = "pop"
+    url = "https://api.spotify.com/v1/browse/categories/"+genre+"/playlists"
+
+    headers = {
+    "Authorization": "Bearer " + session['access_token']
+    }
+
+    params = {
+    "limit": 5,
+    "offset": 0
+    }
+
+    response = requests.get(url.format(category_id="your_category_id"), headers=headers, params=params)
+
+    print(response.json())
+    return response.json()
 
 @app.route('/create_playlist', methods=['POST'])
 def create_playlist():
