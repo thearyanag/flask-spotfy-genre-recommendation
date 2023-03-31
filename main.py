@@ -107,7 +107,7 @@ def top_songs():
 @app.route('/top_playlists')
 def top_playlists():
     genre = request.args.get('genre')
-    genre = "pop"
+    # genre = "pop"
     url = "https://api.spotify.com/v1/browse/categories/"+genre+"/playlists"
 
     headers = {
