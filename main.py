@@ -60,6 +60,7 @@ def callback():
     response_data = response.json()
     access_token = response_data['access_token']
     refresh_token = response_data['refresh_token']
+    # server side session management
     session['access_token'] = access_token
 
     return "Access token: {}".format(access_token)
@@ -68,7 +69,7 @@ def callback():
 @app.route('/top_songs')
 def top_songs():
     genre = request.args.get('genre')
-    genre = "pop"
+    # genre = "pop"
     top_items = get_user_top_items(session['access_token'])
     headers = {
         'Authorization': 'Bearer ' + session['access_token']
