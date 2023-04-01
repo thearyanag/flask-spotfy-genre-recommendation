@@ -37,7 +37,7 @@ def authorize():
         "response_type": "code",
         "redirect_uri": redirect_uri,
         # Add additional scopes here if needed
-        "scope": "user-read-private user-read-email playlist-modify-private user-top-read"
+        "scope": "user-read-private user-read-email playlist-modify-private playlist-modify-public user-top-read"
     }
     url = requests.Request('GET', auth_url, params=params).prepare().url
     print(url)
@@ -58,6 +58,7 @@ def callback():
     }
     response = requests.post(token_url, headers=headers, data=data)
     response_data = response.json()
+    print(response)
     access_token = response_data['access_token']
     refresh_token = response_data['refresh_token']
     # server side session management
