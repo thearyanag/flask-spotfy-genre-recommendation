@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, session
+from flask import Flask, request, redirect, session,make_response
 import requests
 import base64
 from dotenv import load_dotenv
@@ -8,17 +8,25 @@ from getmetadata import getmetadata2
 from getUserTopItems import get_user_top_items
 from getSameArtistSong import getTopSong
 import random
+from flask_cors import CORS
 load_dotenv()
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 app = Flask(__name__)
-app.secret_key = SECRET_KEY
 
+CORS(app)
+
+# app.secret_key = SECRET_KEY
+app.secret_key = 'ytjfhygfdggfedtt5uy56y5346jgbvcvew34ey'
 
 # Replace these values with your own
-client_id = os.getenv('CLIENT_ID')
-client_secret = os.getenv('CLIENT_SECRET')
-redirect_uri = os.getenv('REDIRECT_URI')
+# client_id = os.getenv('CLIENT_ID')
+# client_secret = os.getenv('CLIENT_SECRET')
+# redirect_uri = os.getenv('REDIRECT_URI')
+
+client_id = 'd01d96529f0a4984b141c4063863100d'
+client_secret = '8828063e4d6f4118a8cdd6469bac0196'
+redirect_uri = 'http://localhost:8080/'
 
 auth_url = "https://accounts.spotify.com/authorize"
 token_url = "https://accounts.spotify.com/api/token"
@@ -32,6 +40,7 @@ def index():
 @app.route("/authorize")
 def authorize():
     # Step 1: Redirect user to Spotify's authorization page
+    
     params = {
         "client_id": client_id,
         "response_type": "code",
@@ -46,17 +55,20 @@ def authorize():
 
 @app.route("/callback")
 def callback():
+
     # Step 2: User has authorized the app, now get the access token
     code = request.args.get('code')
     headers = {
         'Authorization': 'Basic ' + base64.b64encode((client_id + ':' + client_secret).encode()).decode()
     }
+    print("code ________",code)
     data = {
         'grant_type': 'authorization_code',
         'code': code,
         'redirect_uri': redirect_uri
     }
     response = requests.post(token_url, headers=headers, data=data)
+    print('response__',response)
     response_data = response.json()
     access_token = response_data['access_token']
     refresh_token = response_data['refresh_token']
@@ -70,9 +82,17 @@ def callback():
 def top_songs():
     genre = request.args.get('genre')
     # genre = "pop"
-    top_items = get_user_top_items(session['access_token'])
+    auth_header = request.headers.get('Authorization')
+    print("auth_header",auth_header)
+    if auth_header:
+        auth_token = auth_header
+        
+    else:
+        print ("Authorization header not present")
+    
+    top_items = get_user_top_items(auth_token)
     headers = {
-        'Authorization': 'Bearer ' + session['access_token']
+        'Authorization': 'Bearer ' + auth_token
     }
     params = (
         ('limit', '20'),
@@ -96,7 +116,7 @@ def top_songs():
     random_artist = random.sample(artist_id, 5)
     artist_songs = []
     for id in random_artist:
-        artist_songs.append(getTopSong(id, session['access_token']))
+        artist_songs.append(getTopSong(id, auth_token))
     return {'top_songs': {
         'name': top_songs,
         'id': top_songs_id,
