@@ -108,7 +108,6 @@ def top_songs():
 @app.route('/top_playlists')
 def top_playlists():
     genre = request.args.get('genre')
-    # genre = "pop"
     url = "https://api.spotify.com/v1/browse/categories/"+genre+"/playlists"
 
     headers = {
@@ -133,9 +132,9 @@ def create_playlist():
 
     response = requests.get('https://api.spotify.com/v1/me', headers=headers)
     user_id = response.json()['id']
-    print(user_id)
-    playlist_name = "test"
+    playlist_name = request.form.get("playlistName")
     song_ids = request.form.getlist('song_ids')
+    song_ids = song_ids[0].split(',')
     headers = {
         'Authorization': 'Bearer ' + session['access_token'],
         'Content-Type': 'application/json',
@@ -147,7 +146,9 @@ def create_playlist():
     response = requests.post(
         f'https://api.spotify.com/v1/users/{user_id}/playlists', headers=headers, json=data)
     playlist_id = response.json()['id']
+
     uris = [f'spotify:track:{song_id}' for song_id in song_ids]
+
     data = {
         'uris': uris,
     }
