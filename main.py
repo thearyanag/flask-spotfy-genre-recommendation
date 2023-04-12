@@ -28,6 +28,7 @@ client_id = 'd01d96529f0a4984b141c4063863100d'
 client_secret = '8828063e4d6f4118a8cdd6469bac0196'
 redirect_uri = 'http://localhost:8080/'
 
+
 auth_url = "https://accounts.spotify.com/authorize"
 token_url = "https://accounts.spotify.com/api/token"
 
@@ -146,17 +147,31 @@ def top_playlists():
 
 @app.route('/create_playlist', methods=['POST'])
 def create_playlist():
+
+    auth_header = request.headers.get('Authorization')
+    print("auth_header",auth_header)
+    if auth_header:
+        auth_token = auth_header
+        
+    else:
+        print ("Authorization header not present")
+
     headers = {
-        'Authorization': f'Bearer ' + session['access_token'],
+        'Authorization': f'Bearer ' + auth_token
     }
 
     response = requests.get('https://api.spotify.com/v1/me', headers=headers)
-    user_id = response.json()['id']
+    print('response from request',response.json())
+    # user_id = response.json()['id']
+    data = response.json()
+    user_id = data['id']
+    print('user id',user_id)
     playlist_name = request.form.get("playlistName")
     song_ids = request.form.getlist('song_ids')
+    print('song ids ===>',song_ids)
     song_ids = song_ids[0].split(',')
     headers = {
-        'Authorization': 'Bearer ' + session['access_token'],
+        'Authorization': 'Bearer ' + auth_token,
         'Content-Type': 'application/json',
     }
     data = {
